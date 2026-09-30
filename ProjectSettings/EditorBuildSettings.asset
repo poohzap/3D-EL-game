@@ -6,7 +6,17 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
-    guid: 99c9720ab356a0642a771bea13969a05
+    path: Assets/_Game/Scenes/Splash.unity
+    guid: 1daa3ed89887d784eaf1cf468e9123ad
+  - enabled: 1
+    path: Assets/_Game/Scenes/MainMenu.unity
+    guid: b40c28f9a99fade41ba5769d79cb0f43
+  - enabled: 1
+    path: Assets/_Game/Scenes/Loading.unity
+    guid: 24077e498a4e0954eb515d2f72533008
+  - enabled: 1
+    path: Assets/_Game/Scenes/Gameplay.unity
+    guid: 36bd9f64efe26514d80ad920e572698f
   m_configObjects:
+    com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

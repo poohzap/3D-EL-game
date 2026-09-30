@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2541fb07c0398e147aaea0fa5e47223d, type: 3}
+  m_Name: Skin_Rogue
+  m_EditorClassIdentifier: Assembly-CSharp::SkinData
+  skinId: rogue
+  displayName: Rogue
+  price: 250
+  modelPrefab: {fileID: 5298035899068938613, guid: e7e82bd1f02db7a44bb330c55145260a, type: 3}
+  icon: {fileID: 0}

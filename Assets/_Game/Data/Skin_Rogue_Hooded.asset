@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2541fb07c0398e147aaea0fa5e47223d, type: 3}
+  m_Name: Skin_Rogue_Hooded
+  m_EditorClassIdentifier: Assembly-CSharp::SkinData
+  skinId: rogue_hooded
+  displayName: Rogue_hooded
+  price: 300
+  modelPrefab: {fileID: 7310657026953769605, guid: d64ae18494c644a48a17dcc771a4c465, type: 3}
+  icon: {fileID: 0}
