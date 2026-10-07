@@ -16,4 +16,4 @@ MonoBehaviour:
   displayName: Knight
   price: 150
   modelPrefab: {fileID: 8809128405235656704, guid: ec435d67e7094984e8171c348fe1e512, type: 3}
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: a92b799a88d7f61fde364ec3ecee5478, type: 3}

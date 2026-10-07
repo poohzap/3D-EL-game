@@ -14,7 +14,8 @@ public class LoadingScreen : MonoBehaviour
     {
         float startTime = Time.time;
 
-        AsyncOperation op = SceneManager.LoadSceneAsync(SceneLoader.TargetScene);
+        string target = string.IsNullOrEmpty(SceneLoader.TargetScene) ? "Gameplay" : SceneLoader.TargetScene;
+        AsyncOperation op = SceneManager.LoadSceneAsync(target);
         op.allowSceneActivation = false;
 
         while (op.progress < 0.9f)

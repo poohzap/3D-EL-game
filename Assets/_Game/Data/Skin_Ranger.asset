@@ -16,4 +16,4 @@ MonoBehaviour:
   displayName: Ranger
   price: 200
   modelPrefab: {fileID: 1011942556393385726, guid: 88ad5c03d55cb8a4282d0b88a481c8d7, type: 3}
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: a46420d32caf15a27c1c09df917f8294, type: 3}

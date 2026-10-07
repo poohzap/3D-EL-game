@@ -1,50 +1,37 @@
 // SlideBendEffect.cs
 using UnityEngine;
 
-// Tạo tư thế trượt kiểu "nằm nghiêng trườn tới" (baseball slide) — nghiêng
-// cả model 1 góc cố định + hạ thấp xuống, giữ nguyên tư thế suốt lúc trượt.
+// Nghiêng người về trước khi trượt — chỉ xoay, KHÔNG dịch Position.
+// Vì pivot của model KayKit nằm ở lòng bàn chân, xoay quanh đó tự nhiên khiến
+// thân trên đổ xuống thấp, trong khi chân vẫn đứng đúng mặt track — không bị chìm.
 public class SlideBendEffect : MonoBehaviour
 {
-    [Tooltip("Kéo GameObject chứa model đang hiển thị vào đây")]
+    [Tooltip("Kéo GameObject chứa model đang hiển thị vào đây (ModelSlot)")]
     public Transform modelSlot;
 
-    [Tooltip("Góc nghiêng người khi trượt (độ) — giữ nguyên, không xoay vòng")]
-    public float slideTiltAngle = 75f;
+    [Tooltip("Góc nghiêng người về trước khi trượt (độ)")]
+    public float slideTiltAngle = 45f;
 
-    [Tooltip("Hạ thấp người xuống bao nhiêu khi trượt (đơn vị world)")]
-    public float slideDropHeight = 0.5f;
-
-    [Tooltip("Tốc độ chuyển vào/ra tư thế trượt")]
-    public float transitionSpeed = 10f;
+    [Tooltip("Tốc độ xoay vào/ra tư thế trượt (độ/giây)")]
+    public float tiltSpeed = 480f;
 
     private PlayerController playerController;
     private Quaternion baseLocalRotation;
-    private Vector3 baseLocalPosition;
     private float currentTilt;
-    private float currentDrop;
 
     void Start()
     {
         playerController = GetComponent<PlayerController>();
-        if (modelSlot != null)
-        {
-            baseLocalRotation = modelSlot.localRotation;
-            baseLocalPosition = modelSlot.localPosition;
-        }
+        if (modelSlot != null) baseLocalRotation = modelSlot.localRotation;
     }
 
     void LateUpdate()
     {
         if (modelSlot == null || playerController == null) return;
 
-        bool sliding = playerController.IsSliding;
-        float targetTilt = sliding ? slideTiltAngle : 0f;
-        float targetDrop = sliding ? slideDropHeight : 0f;
-
-        currentTilt = Mathf.MoveTowards(currentTilt, targetTilt, transitionSpeed * 20f * Time.deltaTime);
-        currentDrop = Mathf.MoveTowards(currentDrop, targetDrop, transitionSpeed * Time.deltaTime);
+        float targetTilt = playerController.IsSliding ? slideTiltAngle : 0f;
+        currentTilt = Mathf.MoveTowards(currentTilt, targetTilt, tiltSpeed * Time.deltaTime);
 
         modelSlot.localRotation = baseLocalRotation * Quaternion.AngleAxis(currentTilt, Vector3.right);
-        modelSlot.localPosition = baseLocalPosition - Vector3.up * currentDrop;
     }
 }

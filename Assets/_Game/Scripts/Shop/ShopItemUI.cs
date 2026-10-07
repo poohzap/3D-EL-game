@@ -18,25 +18,38 @@ public class ShopItemUI : MonoBehaviour
     {
         data = skin;
         shop = manager;
-        iconImage.sprite = skin.icon;
-        nameText.text = skin.displayName;
-        actionButton.onClick.AddListener(OnClick);
+        if (iconImage != null)
+        {
+            iconImage.sprite = skin.icon;
+            iconImage.enabled = skin.icon != null;
+        }
+        if (nameText != null) nameText.text = skin.displayName;
+        if (actionButton != null)
+        {
+            actionButton.onClick.RemoveAllListeners();
+            actionButton.onClick.AddListener(OnClick);
+        }
         Refresh();
     }
 
-    void Refresh()
+    public void Refresh()
     {
+        if (shop == null || data == null) return;
         bool unlocked = shop.IsUnlocked(data);
-        bool selected = PlayerPrefs.GetString("SelectedSkinId", "") == data.skinId;
+        string currentSelected = PlayerPrefs.GetString("SelectedSkinId", "");
+        if (string.IsNullOrEmpty(currentSelected) && data.price == 0)
+            currentSelected = data.skinId;
 
-        priceText.text = unlocked ? "" : data.price.ToString();
-        actionButtonText.text = !unlocked ? "Mua" : (selected ? "Đang dùng" : "Chọn");
+        bool selected = currentSelected == data.skinId;
+
+        if (priceText != null) priceText.text = unlocked ? "" : data.price.ToString();
+        if (actionButtonText != null)
+            actionButtonText.text = !unlocked ? "Mua" : (selected ? "Đang dùng" : "Chọn");
     }
 
     void OnClick()
     {
         if (!shop.IsUnlocked(data)) shop.Buy(data);
         else shop.Select(data);
-        Refresh();
     }
 }

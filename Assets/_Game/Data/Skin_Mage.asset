@@ -16,4 +16,4 @@ MonoBehaviour:
   displayName: Mage
   price: 150
   modelPrefab: {fileID: 3933054261679042876, guid: 9961da692eea77341bba39574e1197d6, type: 3}
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: a1fc078fef2ffa6cb244ee3d3ee3e481, type: 3}

@@ -16,4 +16,4 @@ MonoBehaviour:
   displayName: Rogue
   price: 250
   modelPrefab: {fileID: 5298035899068938613, guid: e7e82bd1f02db7a44bb330c55145260a, type: 3}
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 08881119e90c6f80a6a4638e8808e2e1, type: 3}

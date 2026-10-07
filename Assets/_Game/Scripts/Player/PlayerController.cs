@@ -49,8 +49,6 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        Debug.Log("isGrounded = " + controller.isGrounded); // dòng tạm, xoá sau khi debug xong
-        if (!IsAlive) return;
         // Không xử lý di chuyển khi đã chết hoặc game đã kết thúc
         if (!IsAlive) return;
         if (GameManager.Instance != null && GameManager.Instance.CurrentState != GameManager.GameState.Playing) return;
@@ -97,12 +95,22 @@ public class PlayerController : MonoBehaviour
 
     public void MoveLeft()
     {
-        if (currentLane > -1) currentLane--;
+        if (currentLane > -1)
+        {
+            currentLane--;
+            Animator anim = GetAnimator();
+            if (anim != null) anim.SetTrigger("DodgeLeftTrigger");
+        }
     }
 
     public void MoveRight()
     {
-        if (currentLane < 1) currentLane++;
+        if (currentLane < 1)
+        {
+            currentLane++;
+            Animator anim = GetAnimator();
+            if (anim != null) anim.SetTrigger("DodgeRightTrigger");
+        }
     }
 
     public void Jump()
@@ -130,6 +138,9 @@ public class PlayerController : MonoBehaviour
         controller.height = newHeight;
         // Hạ tâm collider xuống để nhân vật "cúi" sát đất, thay vì co lại quanh tâm cũ
         controller.center = new Vector3(originalCenter.x, originalCenter.y - heightDiff / 2f, originalCenter.z);
+
+        Animator anim = GetAnimator();
+        if (anim != null) anim.SetTrigger("SlideTrigger");
     }
 
     void EndSlide()

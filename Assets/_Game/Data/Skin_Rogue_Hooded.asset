@@ -16,4 +16,4 @@ MonoBehaviour:
   displayName: Rogue_hooded
   price: 300
   modelPrefab: {fileID: 7310657026953769605, guid: d64ae18494c644a48a17dcc771a4c465, type: 3}
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 2b342919546dac143db1d09edc8e5fc3, type: 3}

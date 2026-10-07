@@ -16,4 +16,4 @@ MonoBehaviour:
   displayName: Barbarian
   price: 0
   modelPrefab: {fileID: 7017529374760855095, guid: 7fd003de486329b4cb525a2519238bfe, type: 3}
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 30c5914d06d0a7ebd2b255de36dc6e16, type: 3}
