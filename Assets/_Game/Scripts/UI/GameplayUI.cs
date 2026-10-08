@@ -11,16 +11,20 @@ public class GameplayUI : MonoBehaviour
     public TMP_Text powerUpText;
 
     [Header("HUD Icons (kéo sprite vào đây)")]
-    public Image coinIcon;          // icon_coin sprite
-    public Image powerUpIcon;       // icon hiện tại của powerup
-    public Sprite iconShield;       // icon_shield
-    public Sprite iconMagnet;       // icon_magnet
-    public Sprite iconRocket;       // icon_rocket
+    public Image  coinIcon;
+    public Image  powerUpIcon;
+    public Sprite iconShield;
+    public Sprite iconBoots;
+    public Sprite iconRocket;
+
+    [Header("Shield Virtual Life")]
+    [Tooltip("Hiển thị icon mạng ảo khi shield đang có hiệu lực")]
+    public Image  shieldLifeIcon;    // icon trái tim / khiên ảo (optional)
 
     [Header("Game Over Panel")]
     public GameObject gameOverPanel;
-    public TMP_Text finalScoreText;
-    public TMP_Text finalCoinText;
+    public TMP_Text   finalScoreText;
+    public TMP_Text   finalCoinText;
 
     [Header("PowerUpManager (auto-find nếu bỏ trống)")]
     public PowerUpManager playerPowerUps;
@@ -34,8 +38,8 @@ public class GameplayUI : MonoBehaviour
     void OnEnable()
     {
         if (playerPowerUps != null) playerPowerUps.OnPowerUpChanged += HandlePowerUpChanged;
-        // Ẩn powerup icon lúc đầu
         SetPowerUpIconVisible(false);
+        SetShieldLifeVisible(false);
     }
 
     void OnDisable()
@@ -47,7 +51,11 @@ public class GameplayUI : MonoBehaviour
     {
         if (GameManager.Instance == null) return;
         if (scoreText != null) scoreText.text = "Điểm: " + GameManager.Instance.Score;
-        if (coinText != null) coinText.text = "" + CurrencyManager.RunCoins;
+        if (coinText  != null) coinText.text  = "" + CurrencyManager.RunCoins;
+
+        // Cập nhật icon mạng ảo theo trạng thái shield realtime
+        if (playerPowerUps != null)
+            SetShieldLifeVisible(playerPowerUps.IsShieldActive && playerPowerUps.HasVirtualLife);
     }
 
     void HandlePowerUpChanged(PowerUpType? type, float remaining)
@@ -56,20 +64,20 @@ public class GameplayUI : MonoBehaviour
         {
             if (powerUpText != null) powerUpText.text = "";
             SetPowerUpIconVisible(false);
+            SetShieldLifeVisible(false);
             return;
         }
 
         if (powerUpText != null)
             powerUpText.text = $"{remaining:0.0}s";
 
-        // Đổi icon theo loại powerup
         if (powerUpIcon != null)
         {
             Sprite s = type.Value switch
             {
                 PowerUpType.Shield    => iconShield,
                 PowerUpType.Rocket    => iconRocket,
-                PowerUpType.JumpBoots => iconMagnet,
+                PowerUpType.JumpBoots => iconBoots,
                 _                     => null
             };
             if (s != null)
@@ -85,13 +93,18 @@ public class GameplayUI : MonoBehaviour
         if (powerUpIcon != null) powerUpIcon.gameObject.SetActive(visible);
     }
 
+    void SetShieldLifeVisible(bool visible)
+    {
+        if (shieldLifeIcon != null) shieldLifeIcon.gameObject.SetActive(visible);
+    }
+
     public void ShowGameOver(int score, int coins)
     {
-        if (gameOverPanel != null) gameOverPanel.SetActive(true);
-        if (finalScoreText != null) finalScoreText.text = "Điểm: " + score;
-        if (finalCoinText != null) finalCoinText.text = "Xu: " + coins;
+        if (gameOverPanel    != null) gameOverPanel.SetActive(true);
+        if (finalScoreText   != null) finalScoreText.text = "Điểm: " + score;
+        if (finalCoinText    != null) finalCoinText.text  = "Xu: "   + coins;
     }
 
     public void OnClickRestart() => GameManager.Instance.RestartGame();
-    public void OnClickMenu() => GameManager.Instance.GoToMenu();
+    public void OnClickMenu()    => GameManager.Instance.GoToMenu();
 }

@@ -13,7 +13,7 @@ public static class UISpritePatcher
     // ─── GUIDs of UI sprites (khớp với .meta files) ─────────────────────────
     const string GUID_COIN    = "8df5b71aa7f9326c9b04c13f4a2f1250";
     const string GUID_SHIELD  = "5cc3892f3ccc743c8771b011ef9329d5";
-    const string GUID_MAGNET  = "e79abcc60421b72a2bb439ec8ea64f11";
+    const string GUID_BOOTS   = "e79abcc60421b72a2bb439ec8ea64f11";
     const string GUID_ROCKET  = "4172c5d7ae3b2a30c4f1661318a5bc76";
 
     const string GUID_BTN_PLAY    = "7eb84cbb7ac8ab44caf9b4bef1ff3cca";
@@ -107,7 +107,7 @@ public static class UISpritePatcher
             if (gui != null)
             {
                 gui.iconShield = LoadSprite(GUID_SHIELD);
-                gui.iconMagnet = LoadSprite(GUID_MAGNET);
+                gui.iconBoots  = LoadSprite(GUID_BOOTS);
                 gui.iconRocket = LoadSprite(GUID_ROCKET);
 
                 // Wire coinIcon Image (first Image named CoinIcon)
