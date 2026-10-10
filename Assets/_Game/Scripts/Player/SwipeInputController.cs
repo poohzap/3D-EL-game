@@ -9,8 +9,15 @@ public class SwipeInputController : MonoBehaviour
     private Vector2 startTouchPos;
     private bool isTouching;
 
+    void Awake()
+    {
+        if (player == null) player = GetComponent<PlayerController>();
+    }
+
     void Update()
     {
+        if (GameManager.Instance != null &&
+    GameManager.Instance.CurrentState != GameManager.GameState.Playing) { isTouching = false; return; }
         HandleTouchInput();
         HandleEditorTestInput(); // chuột/bàn phím — chỉ để tiện test trong Editor, không ảnh hưởng khi build Android
     }
@@ -38,10 +45,12 @@ public class SwipeInputController : MonoBehaviour
         if (Input.GetMouseButtonDown(0)) { startTouchPos = Input.mousePosition; isTouching = true; }
         if (Input.GetMouseButtonUp(0) && isTouching) { DetectSwipe(Input.mousePosition); isTouching = false; }
 
-        if (Input.GetKeyDown(KeyCode.LeftArrow)) player.MoveLeft();
-        if (Input.GetKeyDown(KeyCode.RightArrow)) player.MoveRight();
-        if (Input.GetKeyDown(KeyCode.UpArrow)) player.Jump();
-        if (Input.GetKeyDown(KeyCode.DownArrow)) player.Slide();
+        if (player == null) return;
+
+        if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A)) player.MoveLeft();
+        if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D)) player.MoveRight();
+        if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.Space)) player.Jump();
+        if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S)) player.Slide();
     }
 
     void DetectSwipe(Vector2 endPos)

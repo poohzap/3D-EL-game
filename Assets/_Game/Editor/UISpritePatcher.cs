@@ -12,9 +12,11 @@ public static class UISpritePatcher
 {
     // ─── GUIDs of UI sprites (khớp với .meta files) ─────────────────────────
     const string GUID_COIN    = "8df5b71aa7f9326c9b04c13f4a2f1250";
-    const string GUID_SHIELD  = "5cc3892f3ccc743c8771b011ef9329d5";
-    const string GUID_BOOTS   = "e79abcc60421b72a2bb439ec8ea64f11";
-    const string GUID_ROCKET  = "4172c5d7ae3b2a30c4f1661318a5bc76";
+    // Icon powerup dùng sprite folder Assets/_Game/Art/UI/HUD/
+    // (sửa lỗi cũ: GUID_BOOTS từng trỏ nhầm icon_magnet e79abcc6...)
+    const string GUID_SHIELD  = "71349bda49fdc3d49ba2b8de454b4c6b"; // HUD/icon_shield.png
+    const string GUID_BOOTS   = "f524cf87686864a46a0f2aa990f01fda"; // HUD/icon_jump_boots.png
+    const string GUID_ROCKET  = "fa29d06cb83ec42418fa861c3f93c6b5"; // HUD/icon_rocket.png
 
     const string GUID_BTN_PLAY    = "7eb84cbb7ac8ab44caf9b4bef1ff3cca";
     const string GUID_BTN_SHOP    = "585931ac07f95e26eee813ce54a94421";

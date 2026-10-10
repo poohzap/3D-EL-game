@@ -15,6 +15,12 @@ public class PlayerController : MonoBehaviour
     public float slideDuration        = 0.7f;
     [Range(0.1f, 1f)] public float slideHeightMultiplier = 0.5f;
 
+    [Header("Hiệu ứng Boots (Bật nhảy & Bouncy Steps)")]
+    [Tooltip("Lực nảy mỗi bước chạy khi Boots đang kích hoạt (thấp hơn jumpForce = 9)")]
+    public float bootsStepBounceForce = 4.0f;
+    [Tooltip("Hệ số tăng lực nhảy cao khi bấm Jump lúc có Boots")]
+    public float bootsJumpMultiplier  = 1.5f;
+
     [Header("Bay (Rocket)")]
     public float flightHeight    = 4f;   // độ cao khi bay
     public float flightRiseSpeed = 6f;
@@ -30,15 +36,24 @@ public class PlayerController : MonoBehaviour
     private float originalHeight;
     private Vector3 originalCenter;
 
+    private bool isJumping;        // Đang trong cú nhảy cao chủ động (bấm Jump)
+    private bool isAutoVaulting;   // Đang trong cú bật vọt dốc tự động
+
     public bool IsAlive  { get; private set; } = true;
     public bool IsFlying => powerUps != null && powerUps.IsFlying;
     public bool IsSliding => isSliding;
+    public bool IsJumping => isJumping;
+    public bool HasBoots => powerUps != null && powerUps.IsJumpBoosted;
 
     // ── Lifecycle ────────────────────────────────────────────────────────────
     void Awake()
     {
-        controller    = GetComponent<CharacterController>();
-        powerUps      = GetComponent<PowerUpManager>();
+        controller = GetComponent<CharacterController>();
+        powerUps = GetComponent<PowerUpManager>();
+    }
+
+    void Start()
+    {
         originalHeight = controller.height;
         originalCenter = controller.center;
     }
@@ -64,20 +79,39 @@ public class PlayerController : MonoBehaviour
         // --- Trục Z: luôn chạy tới ---
         float deltaZ = forwardSpeed * Time.deltaTime;
 
-        // --- Trục Y: bay hoặc nhảy/trọng lực ---
+        // --- Trục Y: bay hoặc nhảy/trọng lực/nảy Boots ---
         float deltaY;
         if (IsFlying)
         {
             float newY = Mathf.MoveTowards(transform.position.y, flightHeight, flightRiseSpeed * Time.deltaTime);
-            deltaY          = newY - transform.position.y;
+            deltaY           = newY - transform.position.y;
             verticalVelocity = 0f;
+            isJumping        = false;
+            isAutoVaulting   = false;
         }
         else
         {
+            bool hasBoots = HasBoots;
+
             if (controller.isGrounded && verticalVelocity <= 0f)
-                verticalVelocity = -1f;
+            {
+                isJumping      = false;
+                isAutoVaulting = false;
+
+                if (hasBoots && !isSliding)
+                {
+                    // Boots đang kích hoạt & đang chạy bộ: mỗi bước chân nảy lên một chút
+                    verticalVelocity = bootsStepBounceForce;
+                }
+                else
+                {
+                    verticalVelocity = -1f;
+                }
+            }
             else
+            {
                 verticalVelocity += gravity * Time.deltaTime;
+            }
 
             deltaY = verticalVelocity * Time.deltaTime;
         }
@@ -116,10 +150,22 @@ public class PlayerController : MonoBehaviour
     public void Jump()
     {
         if (IsFlying) return;
-        if (!controller.isGrounded || isSliding) return;
+        if (isSliding) return;
 
-        float boost = (powerUps != null && powerUps.IsJumpBoosted) ? 1.5f : 1f;
+        bool hasBoots = HasBoots;
+
+        // Cho phép nhảy khi:
+        // 1. Đang chạm đất thông thường (controller.isGrounded)
+        // 2. HOẶC đang trong nhịp nảy bước của Boots (hasBoots && !isJumping)
+        if (!controller.isGrounded && !(hasBoots && !isJumping)) return;
+
+        // Nếu đã đang trong cú nhảy cao chủ động (isJumping == true) thì không cho nhảy kép trên không
+        if (isJumping && !controller.isGrounded) return;
+
+        float boost = hasBoots ? bootsJumpMultiplier : 1f;
         verticalVelocity = jumpForce * boost;
+        isJumping        = true;
+        isAutoVaulting   = false;
 
         Animator anim = GetAnimator();
         if (anim != null) anim.SetTrigger("JumpTrigger");
@@ -128,10 +174,18 @@ public class PlayerController : MonoBehaviour
     public void Slide()
     {
         if (IsFlying) return;
-        if (!controller.isGrounded || isSliding) return;
+        if (isSliding) return;
 
-        isSliding  = true;
-        slideTimer = slideDuration;
+        // Nếu đang ở trên không (đang nhảy hoặc đang nảy Boots), ép rơi nhanh xuống đất để trượt ngay
+        if (!controller.isGrounded)
+        {
+            verticalVelocity = -15f;
+        }
+
+        isJumping        = false;
+        isAutoVaulting   = false;
+        isSliding        = true;
+        slideTimer       = slideDuration;
 
         float newHeight  = originalHeight * slideHeightMultiplier;
         float heightDiff = originalHeight - newHeight;
@@ -155,6 +209,8 @@ public class PlayerController : MonoBehaviour
         if (IsFlying) return;
         if (isSliding) EndSlide();
         verticalVelocity = force;
+        isAutoVaulting   = true;
+        isJumping        = false;
     }
 
     // ── Va chạm ──────────────────────────────────────────────────────────────
@@ -203,16 +259,19 @@ public class PlayerController : MonoBehaviour
     /// </summary>
     bool EvaluateObstacleBehavior(ObstacleBehavior behavior, GameObject obsObject)
     {
+        // Nhảy hợp lệ khi người chơi chủ động bấm Jump hoặc leo dốc AutoVault
+        bool isAirborneAction = (isJumping || isAutoVaulting) && !controller.isGrounded;
+
         switch (behavior)
         {
             // ────────────────────────────────────────────────────────────────
             // Barrier_Single: chỉ nhảy mới qua
-            // Nếu player đang ở trên không (verticalVelocity > 0 hoặc không chạm đất)
-            // nghĩa là đang nhảy → an toàn.  Ngược lại → hit.
+            // Bắt buộc phải bấm Jump (hoặc AutoVault) trên không mới vượt qua.
+            // Nếu chỉ chạy bước nảy Boots thông thường mà không bấm Jump → va chạm.
             // ────────────────────────────────────────────────────────────────
             case ObstacleBehavior.JumpOnly:
             {
-                bool passingByJump = !controller.isGrounded && !isSliding;
+                bool passingByJump = isAirborneAction && !isSliding;
                 if (passingByJump) return true;   // đang nhảy → qua
                 return TryShieldOrDie();
             }
@@ -222,7 +281,7 @@ public class PlayerController : MonoBehaviour
             // ────────────────────────────────────────────────────────────────
             case ObstacleBehavior.JumpOrSlide:
             {
-                bool passingByJump  = !controller.isGrounded && !isSliding;
+                bool passingByJump  = isAirborneAction && !isSliding;
                 bool passingBySlide = isSliding;
                 if (passingByJump || passingBySlide) return true;
                 return TryShieldOrDie();
@@ -230,13 +289,12 @@ public class PlayerController : MonoBehaviour
 
             // ────────────────────────────────────────────────────────────────
             // Shipping Container: KHÔNG thể qua trừ khi có JumpBoots
-            // Dù đang nhảy/trượt cũng không qua được nếu không có Boots
-            // (cần JumpBoots để nhảy đủ cao)
+            // Bắt buộc có Boots VÀ phải bấm nhảy cao (isJumping) vượt qua nó
             // ────────────────────────────────────────────────────────────────
             case ObstacleBehavior.RequiresJumpBoots:
             {
                 bool hasBoots = powerUps != null && powerUps.IsJumpBoosted;
-                if (hasBoots && !controller.isGrounded) return true;  // Boots + đang nhảy
+                if (hasBoots && isAirborneAction) return true;  // Boots + đang nhảy cao
                 return TryShieldOrDie();
             }
         }
@@ -257,7 +315,9 @@ public class PlayerController : MonoBehaviour
 
     void Die()
     {
-        IsAlive = false;
+        IsAlive        = false;
+        isJumping      = false;
+        isAutoVaulting = false;
         if (GameManager.Instance != null) GameManager.Instance.EndGame();
     }
 }

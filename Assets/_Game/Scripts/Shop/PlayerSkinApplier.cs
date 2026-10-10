@@ -3,8 +3,12 @@ using UnityEngine;
 
 public class PlayerSkinApplier : MonoBehaviour
 {
-    public SkinDatabase database;  // kéo ĐÚNG asset SkinDatabase như ShopManager (Mục 8.2)
-    public Transform modelParent;  // vị trí gắn model, là con của Player
+    public SkinDatabase database;  // kéo ĐÚNG asset SkinDatabase như ShopManager
+    public Transform modelParent;  // vị trí gắn model, là con của Player (ModelSlot)
+
+    [Header("Tỉ lệ thu nhỏ nhân vật")]
+    [Tooltip("Tỉ lệ thu nhỏ model nhân vật (0.75 = bé hơn để vừa vặn với làn đường)")]
+    public float modelScale = 0.75f;
 
     void Awake()
     {
@@ -28,7 +32,19 @@ public class PlayerSkinApplier : MonoBehaviour
 
         if (skin != null && skin.modelPrefab != null)
         {
-            Instantiate(skin.modelPrefab, targetParent);
+            GameObject model = Instantiate(skin.modelPrefab, targetParent);
+            model.transform.localPosition = Vector3.zero;
+            model.transform.localRotation = Quaternion.identity;
+            model.transform.localScale = Vector3.one * modelScale;
+        }
+
+        // Cũng thu nhỏ collider tương ứng nếu có CharacterController
+        CharacterController cc = GetComponent<CharacterController>();
+        if (cc != null)
+        {
+            cc.height = 1.6f;
+            cc.radius = 0.38f;
+            cc.center = new Vector3(0f, 0.8f, 0f);
         }
     }
 }

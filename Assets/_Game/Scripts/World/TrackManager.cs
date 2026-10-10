@@ -10,7 +10,7 @@ public class TrackManager : MonoBehaviour
 
     [Header("Prefabs")]
     public GameObject   trackTilePrefab;
-    public GameObject[] obstaclePrefabs;    // Các prefab obstacle thông thường
+    public GameObject[] obstaclePrefabs;    // Các prefab obstacle (BarrierSingle, TrafficBarrier2, ShippingContainer)
     public GameObject   coinPrefab;
     public GameObject[] powerUpPrefabs;
 
@@ -25,7 +25,7 @@ public class TrackManager : MonoBehaviour
     public float speedRampDistance  = 1200f;
     [Range(0f, 1f)] public float minObstacleDensity = 0.35f;
     [Range(0f, 1f)] public float maxObstacleDensity = 0.85f;
-    [Range(0f, 1f)] public float powerUpSpawnChance = 0.06f;
+    [Range(0f, 1f)] public float powerUpSpawnChance = 0.08f;
 
     [Header("Seed ngẫu nhiên (0 = tự sinh ngẫu nhiên)")]
     public int seed = 0;
@@ -35,12 +35,25 @@ public class TrackManager : MonoBehaviour
     private readonly List<GameObject>  activeTiles = new List<GameObject>();
     private float nextSpawnZ;
     private int   tilesSpawned;
+    private bool  wasFlying = false;
 
     void Awake()
     {
         int usedSeed = seed != 0 ? seed : System.Environment.TickCount;
         rng = new System.Random(usedSeed);
         Debug.Log("TrackManager seed = " + usedSeed);
+    }
+
+    void OnEnable()
+    {
+        if (playerPowerUps != null)
+            playerPowerUps.OnPowerUpChanged += HandlePowerUpChanged;
+    }
+
+    void OnDisable()
+    {
+        if (playerPowerUps != null)
+            playerPowerUps.OnPowerUpChanged -= HandlePowerUpChanged;
     }
 
     void Start()
@@ -69,6 +82,62 @@ public class TrackManager : MonoBehaviour
 
         DespawnPassedTiles();
         UpdateDifficulty();
+    }
+
+    void HandlePowerUpChanged(PowerUpType? type, float remaining)
+    {
+        bool isFlyingNow = (type == PowerUpType.Rocket && remaining > 0f);
+        if (isFlyingNow && !wasFlying)
+        {
+            // Vừa kích hoạt Rocket: dọn sạch mọi obstacle trên các tile phía trước và spawn coin trên trời ngay lập tức!
+            ConvertAheadTilesForFlight();
+        }
+        wasFlying = isFlyingNow;
+    }
+
+    void ConvertAheadTilesForFlight()
+    {
+        if (player == null) return;
+        float playerZ = player.transform.position.z;
+
+        foreach (GameObject tile in activeTiles)
+        {
+            if (tile == null) continue;
+            // Chỉ áp dụng cho các tile ở vị trí phía trước người chơi
+            if (tile.transform.position.z >= playerZ - tileLength)
+            {
+                TrackTile trackTile = tile.GetComponent<TrackTile>();
+                if (trackTile == null || trackTile.contentRoot == null) continue;
+                Transform content = trackTile.contentRoot;
+
+                // Xoá mọi obstacle trên tile
+                for (int i = content.childCount - 1; i >= 0; i--)
+                {
+                    Transform child = content.GetChild(i);
+                    if (child.CompareTag("Obstacle"))
+                    {
+                        Destroy(child.gameObject);
+                    }
+                }
+
+                // Kiểm tra xem tile này đã có coin trên trời chưa, nếu chưa có thì spawn
+                bool hasFlightCoins = false;
+                for (int i = 0; i < content.childCount; i++)
+                {
+                    Transform child = content.GetChild(i);
+                    if (child.CompareTag("Coin") && child.localPosition.y >= (player.flightHeight - 1.5f))
+                    {
+                        hasFlightCoins = true;
+                        break;
+                    }
+                }
+
+                if (!hasFlightCoins)
+                {
+                    SpawnFlightCoins(content);
+                }
+            }
+        }
     }
 
     void UpdateDifficulty()
@@ -150,6 +219,12 @@ public class TrackManager : MonoBehaviour
 
     void SpawnObstaclesAndCoins(Transform content, float tileStartZ)
     {
+        if (obstaclePrefabs == null || obstaclePrefabs.Length == 0)
+        {
+            SpawnCoinLine(content, RandomLane());
+            return;
+        }
+
         if (rng.NextDouble() < CurrentObstacleDensity())
         {
             List<int> lanes = new List<int> { -1, 0, 1 };
@@ -162,6 +237,7 @@ public class TrackManager : MonoBehaviour
             foreach (int lane in blocked)
             {
                 GameObject prefab = obstaclePrefabs[rng.Next(obstaclePrefabs.Length)];
+                if (prefab == null) continue;
                 GameObject obs    = Instantiate(prefab, content);
                 Vector3    p      = obs.transform.localPosition;
                 obs.transform.localPosition = new Vector3(lane * player.laneDistance, p.y, localZ);
@@ -199,6 +275,8 @@ public class TrackManager : MonoBehaviour
     // ── Coin trên trời khi đang bay (Rocket) ─────────────────────────────────
     void SpawnFlightCoins(Transform content)
     {
+        if (coinPrefab == null || player == null) return;
+
         float flightHeight = player.flightHeight;
         bool  zigzag       = rng.Next(2) == 0;
         const int steps    = 6;
@@ -217,10 +295,22 @@ public class TrackManager : MonoBehaviour
     // ── PowerUp ───────────────────────────────────────────────────────────────
     void SpawnPowerUp(Transform content)
     {
+        if (powerUpPrefabs == null || powerUpPrefabs.Length == 0) return;
+
         GameObject prefab = powerUpPrefabs[rng.Next(powerUpPrefabs.Length)];
-        GameObject pu     = Instantiate(prefab, content);
-        Vector3    p      = pu.transform.localPosition;
-        pu.transform.localPosition = new Vector3(RandomLane() * player.laneDistance, p.y, tileLength * 0.5f);
+        if (prefab == null) return;
+
+        GameObject pu = Instantiate(prefab, content);
+        Vector3    p  = pu.transform.localPosition;
+        int lane      = RandomLane();
+        pu.transform.localPosition = new Vector3(lane * player.laneDistance, p.y, tileLength * 0.5f);
+
+        // YÊU CẦU: Khi spawn rocket thì phải spawn coin trên không cùng lúc!
+        PowerUpPickup pickup = pu.GetComponent<PowerUpPickup>();
+        if (pickup != null && pickup.type == PowerUpType.Rocket)
+        {
+            SpawnFlightCoins(content);
+        }
     }
 
     // ── Utilities ─────────────────────────────────────────────────────────────
