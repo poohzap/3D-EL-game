@@ -8,25 +8,25 @@ public enum PowerUpType { Shield, JumpBoots, Rocket }
 public class PowerUpManager : MonoBehaviour
 {
     [Header("Thời lượng hiệu lực (giây)")]
-    public float shieldDuration  = 6f;
+    public float shieldDuration = 6f;
     public float jumpBootsDuration = 8f;
-    public float rocketDuration  = 10f;   // Rocket bay 10 giây
+    public float rocketDuration = 10f;   // Rocket bay 10 giây
 
     // ── Trạng thái active ────────────────────────────────────────────────────
     /// <summary>Shield đang cho 1 mạng ảo (tối đa 1).</summary>
-    public bool IsShieldActive   { get; private set; }
-    public bool IsJumpBoosted    { get; private set; }
-    public bool IsFlying         { get; private set; }
+    public bool IsShieldActive { get; private set; }
+    public bool IsJumpBoosted { get; private set; }
+    public bool IsFlying { get; private set; }
 
     /// <summary>
     /// TRUE khi shield đang "sạc" 1 mạng ảo (khác với IsShieldActive timer còn chạy).
     /// Khi bị hit: mất mạng ảo → HasVirtualLife = false, nhưng IsShieldActive vẫn còn
     /// thời gian nếu chưa hết.  Dùng HasVirtualLife để biết còn đỡ được không.
     /// </summary>
-    public bool HasVirtualLife   { get; private set; }
+    public bool HasVirtualLife { get; private set; }
 
-    public float           RemainingTime { get; private set; }
-    public PowerUpType?    CurrentType   { get; private set; }
+    public float RemainingTime { get; private set; }
+    public PowerUpType? CurrentType { get; private set; }
 
     public event Action<PowerUpType?, float> OnPowerUpChanged;
 
@@ -53,10 +53,10 @@ public class PowerUpManager : MonoBehaviour
                 HasVirtualLife = true;   // 1 mạng ảo
                 break;
             case PowerUpType.JumpBoots: IsJumpBoosted = true; break;
-            case PowerUpType.Rocket:    IsFlying       = true; break;
+            case PowerUpType.Rocket: IsFlying = true; break;
         }
 
-        CurrentType   = type;
+        CurrentType = type;
         activeRoutine = StartCoroutine(CountDown(GetDuration(type)));
     }
 
@@ -71,6 +71,7 @@ public class PowerUpManager : MonoBehaviour
         {
             HasVirtualLife = false;   // tiêu mạng ảo
             // Shield timer vẫn còn chạy; khi hết timer thì IsShieldActive = false
+            AudioManager.Instance?.PlaySfx(Sfx.ShieldBreak);
             OnPowerUpChanged?.Invoke(CurrentType, RemainingTime);
             return true;
         }
@@ -80,10 +81,10 @@ public class PowerUpManager : MonoBehaviour
     // ── Helpers ──────────────────────────────────────────────────────────────
     float GetDuration(PowerUpType type) => type switch
     {
-        PowerUpType.Shield    => shieldDuration,
+        PowerUpType.Shield => shieldDuration,
         PowerUpType.JumpBoots => jumpBootsDuration,
-        PowerUpType.Rocket    => rocketDuration,
-        _                     => 0f
+        PowerUpType.Rocket => rocketDuration,
+        _ => 0f
     };
 
     IEnumerator CountDown(float duration)
@@ -98,6 +99,8 @@ public class PowerUpManager : MonoBehaviour
 
         ClearAllEffects();
         CurrentType = null;
+        if (GameManager.Instance == null || GameManager.Instance.CurrentState == GameManager.GameState.Playing)
+            AudioManager.Instance?.PlaySfx(Sfx.PowerUpEnd);
         OnPowerUpChanged?.Invoke(null, 0f);
     }
 
@@ -105,7 +108,7 @@ public class PowerUpManager : MonoBehaviour
     {
         IsShieldActive = false;
         HasVirtualLife = false;
-        IsJumpBoosted  = false;
-        IsFlying       = false;
+        IsJumpBoosted = false;
+        IsFlying = false;
     }
 }

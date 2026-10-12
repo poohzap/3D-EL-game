@@ -16,6 +16,8 @@ public class GameplayUI : MonoBehaviour
     public Sprite iconShield;
     public Sprite iconBoots;
     public Sprite iconRocket;
+    public SpriteNumberDisplay scoreDigits;
+    public SpriteNumberDisplay coinDigits;
 
     [Header("Shield Virtual Life")]
     [Tooltip("Hiển thị icon mạng ảo khi shield đang có hiệu lực")]
@@ -26,6 +28,8 @@ public class GameplayUI : MonoBehaviour
     public GameObject pausePanel;
     public TMP_Text finalScoreText;
     public TMP_Text finalCoinText;
+    public SpriteNumberDisplay finalScoreDigits;
+    public SpriteNumberDisplay finalCoinDigits;
 
     [Header("PowerUpManager (auto-find nếu bỏ trống)")]
     public PowerUpManager playerPowerUps;
@@ -201,8 +205,11 @@ public class GameplayUI : MonoBehaviour
         if (GameManager.Instance == null) return;
 
         // --- Điểm / Xu ---
+        if (scoreDigits != null) scoreDigits.SetValue(GameManager.Instance.Score);
+        if (coinDigits != null) coinDigits.SetValue(CurrencyManager.RunCoins);
         if (prettyHudActive)
         {
+
             if (scoreValueText != null) scoreValueText.text = GameManager.Instance.Score.ToString("D6");
             if (coinValueText != null) coinValueText.text = CurrencyManager.RunCoins.ToString();
         }
@@ -342,8 +349,12 @@ public class GameplayUI : MonoBehaviour
     public void ShowGameOver(int score, int coins)
     {
         if (gameOverPanel != null) gameOverPanel.SetActive(true);
-        if (finalScoreText != null) finalScoreText.text = "Điểm: " + score;
-        if (finalCoinText != null) finalCoinText.text = "Xu: " + coins;
+
+        if (finalScoreDigits != null) finalScoreDigits.SetValue(score);
+        else if (finalScoreText != null) finalScoreText.text = "Điểm: " + score;
+
+        if (finalCoinDigits != null) finalCoinDigits.SetValue(coins);
+        else if (finalCoinText != null) finalCoinText.text = "Xu: " + coins;
     }
 
     public void OnClickRestart() => GameManager.Instance.RestartGame();

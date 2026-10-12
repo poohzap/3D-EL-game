@@ -17,6 +17,8 @@ public class MainMenuUI : MonoBehaviour
 
     void Start()
     {
+        AudioManager.Instance?.PlayMenuMusic();
+
         if (musicVolumeSlider != null)
         {
             float vol = AudioManager.Instance != null ? AudioManager.Instance.CurrentVolume : PlayerPrefs.GetFloat("MusicVolume", 0.7f);

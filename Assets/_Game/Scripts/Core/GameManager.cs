@@ -20,6 +20,7 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 1f;
         Instance = this;
         CurrencyManager.ResetRun();
+        AudioManager.Instance?.PlayGameplayMusic();
     }
 
     public void EndGame()
@@ -28,6 +29,7 @@ public class GameManager : MonoBehaviour
         if (CurrentState == GameState.GameOver) return;
 
         CurrentState = GameState.GameOver;
+        AudioManager.Instance?.PlaySfx(Sfx.GameOver);
         int finalScore = Score;
         int finalCoins = CurrencyManager.RunCoins;
 
